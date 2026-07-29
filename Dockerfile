@@ -21,9 +21,10 @@ RUN apt install -y python3.10 python3-distutils python3-pip python3-apt
 
 WORKDIR /root
 COPY onepassword /root/onepassword
-COPY setup.py /root
+COPY pyproject.toml /root
 COPY README.md /root
 COPY VERSION /root
+COPY LICENSE.txt /root
 
 RUN pip3 install .
 

@@ -10,7 +10,7 @@ class FunctionalTest(unittest.TestCase):
         op = OnePassword()
         vaults = op.list_vaults()
         self.assertTrue(bool(vaults))
-        self.assertTrue('Personal' in vaults)
+        self.assertTrue("Personal" in vaults)
 
     def test_lists_items(self):
         op = OnePassword()
@@ -20,39 +20,41 @@ class FunctionalTest(unittest.TestCase):
 
     def test_reads_fields(self):
         op = OnePassword()
-        field_name = 'password'
-        field_names = ['username', 'password']
-        response = op.get_item_fields('no such item', field_name)
+        field_name = "password"
+        field_names = ["username", "password"]
+        response = op.get_item_fields("no such item", field_name)
         self.assertFalse(bool(response))
-        response = op.get_item_fields('Test Password', field_name)
+        response = op.get_item_fields("Test Password", field_name)
         self.assertTrue(bool(response))
-        self.assertEqual('what a terrible password', response[field_name])
-        response = op.get_item_fields('Test Password', field_names)
+        self.assertEqual("what a terrible password", response[field_name])
+        response = op.get_item_fields("Test Password", field_names)
         self.assertTrue(bool(response))
-        self.assertEqual('fake.for.testing@smurfless.com', response['username'])
-        self.assertEqual('what a terrible password', response['password'])
+        self.assertEqual("fake.for.testing@smurfless.com", response["username"])
+        self.assertEqual("what a terrible password", response["password"])
 
     def test_creates_and_edits_items(self):
         """For keyring compliance, we can create, update, and get passwords."""
         op = OnePassword()
-        item_name = 'Ignore'
-        username = 'foo'
-        password = 'bar'
-        vault_name = 'Personal'
-        op.create_login(username=username, password=password, title=item_name, vault=vault_name)
-        response = op.get_item_fields(item_name, 'username')
-        self.assertTrue(response['username'] in ['foo', 'biz'])
-        op.edit_item_username(uuid=item_name, value='biz')
-        response = op.get_item_fields(item_name, 'username')
-        self.assertEqual('biz', response['username'])
+        item_name = "Ignore"
+        username = "foo"
+        password = "bar"
+        vault_name = "Personal"
+        op.create_login(
+            username=username, password=password, title=item_name, vault=vault_name
+        )
+        response = op.get_item_fields(item_name, "username")
+        self.assertTrue(response["username"] in ["foo", "biz"])
+        op.edit_item_username(uuid=item_name, value="biz")
+        response = op.get_item_fields(item_name, "username")
+        self.assertEqual("biz", response["username"])
         op.delete_item(item_name, vault=vault_name)
-        response = op.get_item_fields(item_name, 'username')
+        response = op.get_item_fields(item_name, "username")
         self.assertFalse(response)
 
     def test_settings(self):
         bp = Settings()
-        key = 'OP_SESSION_smurfless'
-        expected = '0BiDmjLgT2oCMXgHaaMXMJTxA2ZYOJWEMpyQm6bIi4I'
+        key = "OP_SESSION_smurfless"
+        expected = "0BiDmjLgT2oCMXgHaaMXMJTxA2ZYOJWEMpyQm6bIi4I"
         bp.update_profile(key, expected)
         out = bp.get_key_value(key)
         with bp.open() as settings:
@@ -60,7 +62,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(out[0][key], expected)
 
     def test_creds_to_file(self):
-        expected = 'this is a big password'
+        expected = "this is a big password"
         creds = OnePasswordCreds()
         self.assertEqual(None, creds.password)
         creds.password = expected
@@ -77,21 +79,21 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(expected, creds2.secret)
 
     def test_finds_multiples_with_same_title(self):
-        item_name = 'Airbnb'
+        item_name = "Airbnb"
         op = OnePassword()
         matches: Dict[str, str] = op.get_uuids(item_name)
         self.assertEqual(2, len(matches))
         for match in matches.keys():
             fields = op.get_item_fields(match, None)
             # note for future self: this ID only appears when you do not filter by fields
-            self.assertEqual(match, fields.get('id'))
+            self.assertEqual(match, fields.get("id"))
 
     def test_finds_first_uuid_with_hint(self):
-        item_name = 'Airbnb'
+        item_name = "Airbnb"
         op = OnePassword()
-        found = op.get_first_uuid_with_hint(title=item_name, hint='business')
-        self.assertEqual('wyw75vvg6jgmzk5es264hqftyu', found)
+        found = op.get_first_uuid_with_hint(title=item_name, hint="business")
+        self.assertEqual("wyw75vvg6jgmzk5es264hqftyu", found)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

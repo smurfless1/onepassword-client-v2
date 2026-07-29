@@ -42,7 +42,7 @@ class OnePasswordCreds:
     def secret(self) -> Optional[str]:
         if self.encrypted_secret is not None:
             return self.encryptor.decode(self.encrypted_secret)
-        return ''
+        return ""
 
     @secret.setter
     def secret(self, value: str):
@@ -50,7 +50,7 @@ class OnePasswordCreds:
 
     @property
     def session_key_name(self) -> str:
-        return f'OP_SESSION_{self.account}'
+        return f"OP_SESSION_{self.account}"
 
     def load(self):
         setting_file = Settings()

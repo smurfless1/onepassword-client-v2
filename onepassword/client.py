@@ -12,24 +12,26 @@ from onepassword.session_manager import SessionManager
 
 
 class FieldType:
-    PASSWORD = 'password'
-    TEXT = 'text'
+    PASSWORD = "password"
+    TEXT = "text"
 
 
 class DefaultFields:
-    PASSWORD = 'password'
-    USERNAME = 'username'
+    PASSWORD = "password"
+    USERNAME = "username"
 
 
 def vault_arg(vault):
-    vault_arg = f"--vault='{vault}'" if vault else ''
+    vault_arg = f"--vault='{vault}'" if vault else ""
     return vault_arg
 
 
 class OnePassword(SessionManager):
-    """ Class for integrating with a 1Password CLI password manager after it is signed in."""
+    """Class for integrating with a 1Password CLI password manager after it is signed in."""
 
-    def get_uuid(self, docname: str, vault: Optional[str] = None) -> str:  # pragma: no cover
+    def get_uuid(
+        self, docname: str, vault: Optional[str] = None
+    ) -> str:  # pragma: no cover
         """
         Helper function to get the uuid for an item
 
@@ -40,10 +42,12 @@ class OnePassword(SessionManager):
         """
         items = self.list_items(vault=vault)
         for t in items:
-            if t['overview']['title'] == docname:
-                return t['uuid']
+            if t["overview"]["title"] == docname:
+                return t["uuid"]
 
-    def get_uuids(self, title: str, vault: Optional[str] = None) -> Dict[str, str]:  # pragma: no cover
+    def get_uuids(
+        self, title: str, vault: Optional[str] = None
+    ) -> Dict[str, str]:  # pragma: no cover
         """
         Get a map of uuid: additional_information for each match on a title
 
@@ -51,21 +55,25 @@ class OnePassword(SessionManager):
         """
         items = self.list_items(vault=vault)
         filtered = {
-            t.get('id'): t.get('additional_information')
+            t.get("id"): t.get("additional_information")
             for t in items
-            if t.get('title') == title
+            if t.get("title") == title
         }
 
         return filtered
 
-    def get_first_uuid_with_hint(self, title, hint: str, vault: Optional[str] = None) -> Optional[str]:
+    def get_first_uuid_with_hint(
+        self, title, hint: str, vault: Optional[str] = None
+    ) -> Optional[str]:
         matches: Dict = self.get_uuids(title, vault)
         for uuid, additional in matches.items():
             if hint in additional:
                 return uuid
         return None
 
-    def get_document(self, docname: str, vault: Optional[str] = None) -> Optional[dict]:  # pragma: no cover
+    def get_document(
+        self, docname: str, vault: Optional[str] = None
+    ) -> Optional[dict]:  # pragma: no cover
         """
         Helper function to get a document
 
@@ -76,16 +84,22 @@ class OnePassword(SessionManager):
         docid = self.get_uuid(docname, vault=vault)
         local_vault_arg = vault_arg(vault)
         try:
-            return json.loads(self.read_bash_return(f"op document get {docid} {local_vault_arg}"))
+            return json.loads(
+                self.read_bash_return(f"op document get {docid} {local_vault_arg}")
+            )
         except JSONDecodeError:
-            yaml_attempt = yaml.safe_load(self.read_bash_return(f"op document get {docid} {local_vault_arg}"))
+            yaml_attempt = yaml.safe_load(
+                self.read_bash_return(f"op document get {docid} {local_vault_arg}")
+            )
             if isinstance(yaml_attempt, dict):
                 return yaml_attempt
             else:
                 print(f"File {docname} does not exist")
                 return None
 
-    def put_document(self, filename: str, title: str, vault: Optional[str] = None):  # pragma: no cover
+    def put_document(
+        self, filename: str, title: str, vault: Optional[str] = None
+    ):  # pragma: no cover
         """
         Helper function to put a document
 
@@ -107,13 +121,15 @@ class OnePassword(SessionManager):
         :param uuid: uuid of the item you wish to remove
         :param vault: vault the document is in (optional)
         """
-        cmd = f"op item delete \"{uuid}\" {vault_arg(vault)}"
+        cmd = f'op item delete "{uuid}" {vault_arg(vault)}'
         response = self.read_bash_return(cmd)
         if len(response) > 0:
             self._signin()
             self.read_bash_return(cmd)
 
-    def delete_document(self, title: str, vault: Optional[str] = None):  # pragma: no cover
+    def delete_document(
+        self, title: str, vault: Optional[str] = None
+    ):  # pragma: no cover
         """
         Helper function to delete a document
 
@@ -127,7 +143,9 @@ class OnePassword(SessionManager):
             self._signin()
             self.read_bash_return(cmd)
 
-    def update_document(self, filename: str, title: str, vault: Optional[str] = None):  # pragma: no cover
+    def update_document(
+        self, filename: str, title: str, vault: Optional[str] = None
+    ):  # pragma: no cover
         """
         Helper function to update an existing document in 1Password.
 
@@ -153,8 +171,9 @@ class OnePassword(SessionManager):
         :returns: dict of all items
         """
         self.sign_in_if_needed()
-        items = json.loads(self.read_bash_return(
-            f"op item list --format=json {vault_arg(vault)}"))
+        items = json.loads(
+            self.read_bash_return(f"op item list --format=json {vault_arg(vault)}")
+        )
         return items
 
     def get_item_fields(
@@ -178,14 +197,16 @@ class OnePassword(SessionManager):
             if "isn't an item" in returned:
                 return {}
             items: List[Dict] = json.loads(returned)
-            item = {elt.get('id'): elt.get('value') for elt in items}
+            item = {elt.get("id"): elt.get("value") for elt in items}
         elif isinstance(fields, str):
-            returned = self.read_bash_return(f"op item get \"{uuid}\" --fields {fields}").strip()
+            returned = self.read_bash_return(
+                f'op item get "{uuid}" --fields {fields}'
+            ).strip()
             if "isn't an item" in returned:
                 return {}
             item = {fields: returned}
         else:
-            returned = self.read_bash_return(f"op item get \"{uuid}\" --format=json")
+            returned = self.read_bash_return(f'op item get "{uuid}" --format=json')
             if "isn't an item" in returned:
                 return {}
             item = json.loads(returned)
@@ -201,19 +222,23 @@ class OnePassword(SessionManager):
         """op item edit 'Test Password' username='fake.for.testing@smurfless.com'"""
         self.sign_in_if_needed()
         # more types?
-        formatted = field if field in [DefaultFields.USERNAME, DefaultFields.PASSWORD] else f"{field}[{fieldtype}]"
-        cmd = f"op item edit \"{uuid}\" \"{formatted}={value}\""
+        formatted = (
+            field
+            if field in [DefaultFields.USERNAME, DefaultFields.PASSWORD]
+            else f"{field}[{fieldtype}]"
+        )
+        cmd = f'op item edit "{uuid}" "{formatted}={value}"'
         self.read_bash_return(cmd)
 
-    edit_item_username = partialmethod(edit_item_field, fieldtype=FieldType.TEXT, field=DefaultFields.USERNAME)
-    edit_item_password = partialmethod(edit_item_field, fieldtype=FieldType.PASSWORD, field=DefaultFields.PASSWORD)
+    edit_item_username = partialmethod(
+        edit_item_field, fieldtype=FieldType.TEXT, field=DefaultFields.USERNAME
+    )
+    edit_item_password = partialmethod(
+        edit_item_field, fieldtype=FieldType.PASSWORD, field=DefaultFields.PASSWORD
+    )
 
     def create_login(
-        self,
-        username: str,
-        password: str,
-        title: str,
-        vault: Optional[str] = None
+        self, username: str, password: str, title: str, vault: Optional[str] = None
     ):  # pragma: no cover
         """
         Helper function to put a document
@@ -223,18 +248,22 @@ class OnePassword(SessionManager):
         :param vault: vault the document is in (optional)
         """
         self.sign_in_if_needed()
-        op_command = f'op item create --category=login "username={username}" "password={password}" --title="{title}" ' \
-                     f'{vault_arg(vault)}'
+        op_command = (
+            f'op item create --category=login "username={username}" "password={password}" --title="{title}" '
+            f"{vault_arg(vault)}"
+        )
         try:
             # there is a rather serious bug in 1password CLI v2 that locks up with the normal subprocess calls
             # yes they are aware, no their fix didn't work.
             response = self.read_bash_return(op_command)
-            if 'ERROR' in response or len(response) == 0:
-                raise ValueError("1Password reported an error creating an item from the CLI.")
+            if "ERROR" in response or len(response) == 0:
+                raise ValueError(
+                    "1Password reported an error creating an item from the CLI."
+                )
             return
         except:
             # however, THIS works fine. Just not on Windows.
-            command = f'bash -c \'{self.creds.session_key_name}={self.creds.session_key} {op_command}\''
+            command = f"bash -c '{self.creds.session_key_name}={self.creds.session_key} {op_command}'"
             my_env = os.environ.copy()
             my_env[self.creds.session_key_name] = self.creds.session_key
             child = pexpect.spawn(command, env=my_env)
@@ -243,7 +272,9 @@ class OnePassword(SessionManager):
             # stupidly it also takes a second or two to settle
             sleep(2)
 
-    def create_device(self, filename: str, category: str, vault: Optional[str] = None):  # pragma: no cover
+    def create_device(
+        self, filename: str, category: str, vault: Optional[str] = None
+    ):  # pragma: no cover
         """untested, from a fork: merkelste"""
         self.sign_in_if_needed()
         cmd = f'op item create --category device "{category}" "$(op encode < {filename})" {vault_arg(vault)}'

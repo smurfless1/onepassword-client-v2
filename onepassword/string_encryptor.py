@@ -16,7 +16,11 @@ class StringEncryptor:
         self.cipher = AES.new(self.secret_key, AES.MODE_ECB)
 
     def decode(self, encoded: bytes):
-        return unpad(self.cipher.decrypt(base64.b64decode(encoded)), BLOCK_SIZE).decode('UTF-8')
+        return unpad(self.cipher.decrypt(base64.b64decode(encoded)), BLOCK_SIZE).decode(
+            "UTF-8"
+        )
 
     def encode(self, input_str: str):
-        return base64.b64encode(self.cipher.encrypt(pad(str.encode(input_str), BLOCK_SIZE)))
+        return base64.b64encode(
+            self.cipher.encrypt(pad(str.encode(input_str), BLOCK_SIZE))
+        )

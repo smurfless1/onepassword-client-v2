@@ -28,11 +28,17 @@ class SessionManager:
         """
         Collect and cache missing user information for signing in to op
         """
-        self.creds.email = self.creds.email or input("Please input your email address used for 1Password account: ")
+        self.creds.email = self.creds.email or input(
+            "Please input your email address used for 1Password account: "
+        )
         self.creds.account = self.creds.account or domain_from_email(self.creds.email)
         self.creds.domain = self.creds.domain or self.creds.account + ".1password.com"
-        self.creds.secret = self.creds.secret or getpass("Please input your 1Password secret key: ")
-        self.creds.password = self.creds.password or getpass("Please input your master password: ")
+        self.creds.secret = self.creds.secret or getpass(
+            "Please input your 1Password secret key: "
+        )
+        self.creds.password = self.creds.password or getpass(
+            "Please input your master password: "
+        )
         self.creds.save()
 
     def sign_in_if_needed(self):
@@ -67,7 +73,9 @@ class SessionManager:
         op_command = "op signin --raw"
         if self.creds.account is not None:
             op_command = f"op signin --account {self.creds.account} --raw"
-        self.creds.session_key = self._spawn_signin(op_command, str.encode(self.creds.password))
+        self.creds.session_key = self._spawn_signin(
+            op_command, str.encode(self.creds.password)
+        )
         self.creds.save()
 
     def read_bash_return(self, cmd, single=False) -> str:
@@ -81,28 +89,36 @@ class SessionManager:
 
     def list_vaults(self) -> List[str]:
         """Helper function to list all vaults"""
-        returned: List[str] = self.read_bash_return('op vault list').splitlines(keepends=False)
+        returned: List[str] = self.read_bash_return("op vault list").splitlines(
+            keepends=False
+        )
         names = [line.split(maxsplit=1)[-1] for line in returned[1:]]
         return names
 
     def add_account_to_cli(self):
         """op account add
 
-Enter your sign-in address (example.1password.com):
-Enter the email address for your account on smurfless.1password.com:
-Enter the Secret Key for business@smurfless.com on smurfless.1password.com:
-Enter the password for business@smurfless.com at smurfless.1password.com:
-Now run 'eval $(op signin)' to sign in.
+        Enter your sign-in address (example.1password.com):
+        Enter the email address for your account on smurfless.1password.com:
+        Enter the Secret Key for business@smurfless.com on smurfless.1password.com:
+        Enter the password for business@smurfless.com at smurfless.1password.com:
+        Now run 'eval $(op signin)' to sign in.
         """
         self.fill_creds()
-        child = pexpect.spawn('op account add')
-        child.expect('Enter your sign-in address .*: ')
+        child = pexpect.spawn("op account add")
+        child.expect("Enter your sign-in address .*: ")
         child.sendline(self.creds.domain)
-        child.expect(f'Enter the email address for your account on {self.creds.domain}: ')
+        child.expect(
+            f"Enter the email address for your account on {self.creds.domain}: "
+        )
         child.sendline(self.creds.email)
-        child.expect(f'Enter the Secret Key for {self.creds.email} on {self.creds.domain}: ')
+        child.expect(
+            f"Enter the Secret Key for {self.creds.email} on {self.creds.domain}: "
+        )
         child.sendline(self.creds.secret)
-        child.expect(f'Enter the password for {self.creds.email} at {self.creds.domain}: ')
+        child.expect(
+            f"Enter the password for {self.creds.email} at {self.creds.domain}: "
+        )
         child.sendline(self.creds.password)
         child.expect("Now run '.*' to sign in.")
 
@@ -132,9 +148,11 @@ Now run 'eval $(op signin)' to sign in.
                 resp = child.expect([master_password_regex, pexpect.EOF])
                 if resp == 0:
                     child.sendline(m_password)
-        resp = child.expect(['Enter your six-digit authentication code:', pexpect.EOF])
+        resp = child.expect(["Enter your six-digit authentication code:", pexpect.EOF])
         if resp != 1:
-            auth_code = str(input("Please input your 1Password six-digit authentication code: "))
+            auth_code = str(
+                input("Please input your 1Password six-digit authentication code: ")
+            )
             child.sendline(auth_code)
             child.expect(pexpect.EOF)
         before = child.before
@@ -143,11 +161,11 @@ Now run 'eval $(op signin)' to sign in.
             try:
                 sess_key = get_session_key(child.before)
                 return sess_key
-            except (ValueError,IndexError):
-                settingsfile = Path('~/.onepassword.pkl.db').expanduser()
+            except (ValueError, IndexError):
+                settingsfile = Path("~/.onepassword.pkl.db").expanduser()
                 if settingsfile.exists():
                     settingsfile.unlink()
-        return ''
+        return ""
 
 
 master_password_regex = "Enter the password for .* at .*"
@@ -155,8 +173,14 @@ no_accounts_configured = "Do you want to add an account manually"
 
 
 def get_session_key(process_resp_before: bytes) -> str:
-    new_line_response = [x for x in str(process_resp_before).split(" ") if "\\r\\n" in x]
+    new_line_response = [
+        x for x in str(process_resp_before).split(" ") if "\\r\\n" in x
+    ]
     if len(new_line_response) != 1:
-        raise IndexError("Session keys not parsed correctly from response: {}.".format(process_resp_before))
+        raise IndexError(
+            "Session keys not parsed correctly from response: {}.".format(
+                process_resp_before
+            )
+        )
     else:
         return new_line_response[0].split("\\r\\n")[1][:-1]

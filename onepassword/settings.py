@@ -6,13 +6,13 @@ from typing import List, Dict, Iterable
 
 class Settings:
     MASTER_PW_CACHE = Path("~/.onepassword.pkl").expanduser()
-    MASTER_PW_KEY = 'password'  # subtle. I like it.
-    SESSION_KEY = 'OP_SESSION'
-    DEVICE_KEY = 'OP_DEVICE'
-    ACCOUNT_KEY = 'account'
-    DOMAIN_KEY = 'domain'
-    EMAIL_KEY = 'email'
-    SECRET_KEY = 'secret'
+    MASTER_PW_KEY = "password"  # subtle. I like it.
+    SESSION_KEY = "OP_SESSION"
+    DEVICE_KEY = "OP_DEVICE"
+    ACCOUNT_KEY = "account"
+    DOMAIN_KEY = "domain"
+    EMAIL_KEY = "email"
+    SECRET_KEY = "secret"
 
     @contextmanager
     def open(self) -> Iterable[dict]:

@@ -26,18 +26,18 @@ on failed attempts. default: retry.logging_logger. if None, logging is disabled
 
             """
             _tries = tries
-            while (_tries):
+            while _tries:
                 try:
 
                     return func(*args, **kwargs)
 
                 except exceptions as error:  # pylint:disable=broad-except
                     _tries -= 1
-                    if (not _tries):
+                    if not _tries:
                         raise
 
-                    if (logger):
-                        logger.warning('%s, retrying in %s seconds...', error, delay)
+                    if logger:
+                        logger.warning("%s, retrying in %s seconds...", error, delay)
 
                     sleep(delay)
 

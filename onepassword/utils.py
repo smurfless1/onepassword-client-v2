@@ -8,15 +8,18 @@ def read_bash_return(cmd, session_key_var: str, session_key: str, single=True) -
     my_env[session_key_var] = session_key
 
     try:
-        result = subprocess.run(cmd,
-                                shell=True,
-                                check=False,
-                                env=my_env,
-                                capture_output=True,
-                                timeout=5,
-                                input='',
-                                )
-        combined = str(result.stdout.decode('utf-8')) + str(result.stderr.decode('utf-8'))
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            check=False,
+            env=my_env,
+            capture_output=True,
+            timeout=5,
+            input="",
+        )
+        combined = str(result.stdout.decode("utf-8")) + str(
+            result.stderr.decode("utf-8")
+        )
         if single:
             return combined.splitlines(False)[0]
         else:
@@ -26,20 +29,23 @@ def read_bash_return(cmd, session_key_var: str, session_key: str, single=True) -
         print(tee)
 
 
-def limited_bash_return(cmd, session_key_var: str, session_key: str, single=True) -> str:
+def limited_bash_return(
+    cmd, session_key_var: str, session_key: str, single=True
+) -> str:
     my_env = os.environ.copy()
     my_env[session_key_var] = session_key
 
     try:
-        result = subprocess.run(shlex.split(cmd),
-                                check=False,
-                                env=my_env,
-                                timeout=5,
-                                )
-        #combined = str(result.stdout.decode('utf-8')) + str(result.stderr.decode('utf-8'))
-        #if single:
+        result = subprocess.run(
+            shlex.split(cmd),
+            check=False,
+            env=my_env,
+            timeout=5,
+        )
+        # combined = str(result.stdout.decode('utf-8')) + str(result.stderr.decode('utf-8'))
+        # if single:
         #    return combined.splitlines(False)[0]
-        #else:
+        # else:
         #    return combined
 
     except subprocess.TimeoutExpired as tee:
@@ -65,7 +71,7 @@ def bump_version(version_type="patch"):
     :return:
     """
     __root__ = os.path.abspath("")
-    with open(os.path.join(__root__, 'VERSION')) as version_file:
+    with open(os.path.join(__root__, "VERSION")) as version_file:
         version = version_file.read().strip()
 
     all_version = version.replace('"', "").split(".")
@@ -73,8 +79,8 @@ def bump_version(version_type="patch"):
     new_all_version.append(str(int(all_version[-1]) + 1))
     if version_type == "minor":
         new_all_version = [version.split(".")[0]]
-        new_all_version.extend([str(int(all_version[1]) + 1), '0'])
-    new_line = '.'.join(new_all_version) + "\n"
+        new_all_version.extend([str(int(all_version[1]) + 1), "0"])
+    new_line = ".".join(new_all_version) + "\n"
     with open("{}/VERSION".format(__root__), "w") as fp:
         fp.write(new_line)
     fp.close()
@@ -89,7 +95,8 @@ def generate_uuid():
     """
     return read_bash_return(
         "head -c 16 /dev/urandom | base32 | tr -d = | tr '[:upper:]' '[:lower:]'",
-        "", ""
+        "",
+        "",
     )
 
 
@@ -102,7 +109,7 @@ def get_device_uuid(bp):
     :return: (str)
     """
     try:
-        device_uuid = bp.get_key_value("OP_DEVICE")[0]['OP_DEVICE'].strip('"')
+        device_uuid = bp.get_key_value("OP_DEVICE")[0]["OP_DEVICE"].strip('"')
         if device_uuid is None:
             device_uuid = generate_uuid()
             bp.update_profile("OP_DEVICE", device_uuid)
@@ -116,8 +123,8 @@ def get_device_uuid(bp):
 def docker_check() -> bool:
     """Return True if it looks like the OS is run from inside docker"""
     f = None
-    user_home = os.environ.get('HOME')
-    for rcfile in ['.bashrc', '.bash_profile', '.zshrc', '.zprofile']:
+    user_home = os.environ.get("HOME")
+    for rcfile in [".bashrc", ".bash_profile", ".zshrc", ".zprofile"]:
         rcpath = os.path.join(user_home, rcfile)
         if os.path.exists(rcpath):
             f = open(os.path.join(user_home, rcpath), "r")

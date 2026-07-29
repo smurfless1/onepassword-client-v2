@@ -16,5 +16,5 @@ class StringEncrpytorTestCase(unittest.TestCase):
         self.assertEqual("bob", decoded)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
