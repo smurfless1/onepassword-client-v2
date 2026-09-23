@@ -1,16 +1,21 @@
+import base64
 import os
-import subprocess
 import shlex
+import subprocess
 
 
-def read_bash_return(cmd, session_key_var: str, session_key: str, single=True) -> str:
+def read_bash_return(
+    cmd: str | list[str], session_key_var: str, session_key: str, single=True
+) -> str:
+    """Run a command without a shell. A str is split with shlex; prefer a list."""
+    if isinstance(cmd, str):
+        cmd = shlex.split(cmd)
     my_env = os.environ.copy()
     my_env[session_key_var] = session_key
 
     try:
         result = subprocess.run(
             cmd,
-            shell=True,
             check=False,
             env=my_env,
             capture_output=True,
@@ -36,7 +41,7 @@ def limited_bash_return(
     my_env[session_key_var] = session_key
 
     try:
-        result = subprocess.run(
+        subprocess.run(
             shlex.split(cmd),
             check=False,
             env=my_env,
@@ -81,7 +86,7 @@ def bump_version(version_type="patch"):
         new_all_version = [version.split(".")[0]]
         new_all_version.extend([str(int(all_version[1]) + 1), "0"])
     new_line = ".".join(new_all_version) + "\n"
-    with open("{}/VERSION".format(__root__), "w") as fp:
+    with open(f"{__root__}/VERSION", "w") as fp:
         fp.write(new_line)
     fp.close()
 
@@ -93,11 +98,7 @@ def generate_uuid():
 
     :return: (str)
     """
-    return read_bash_return(
-        "head -c 16 /dev/urandom | base32 | tr -d = | tr '[:upper:]' '[:lower:]'",
-        "",
-        "",
-    )
+    return base64.b32encode(os.urandom(16)).decode().rstrip("=").lower()
 
 
 def get_device_uuid(bp):
@@ -122,21 +123,16 @@ def get_device_uuid(bp):
 
 def docker_check() -> bool:
     """Return True if it looks like the OS is run from inside docker"""
-    f = None
     user_home = os.environ.get("HOME")
     for rcfile in [".bashrc", ".bash_profile", ".zshrc", ".zprofile"]:
         rcpath = os.path.join(user_home, rcfile)
         if os.path.exists(rcpath):
-            f = open(os.path.join(user_home, rcpath), "r")
+            with open(rcpath) as f:
+                bash_profile = f.read()
             break
-    if not f:
-        raise Exception("No shell rc or profile files exist.")
-    bash_profile = f.read()
+    else:
+        raise FileNotFoundError("No shell rc or profile files exist.")
     try:
-        docker_flag = bash_profile.split('DOCKER_FLAG="')[1][0]
-        if docker_flag == "t":
-            return True
-        else:
-            return False
+        return bash_profile.split('DOCKER_FLAG="')[1][0] == "t"
     except IndexError:
         return False

@@ -1,3 +1,31 @@
 [tools]
-python = "3.10"
+python = "3.13"
 uv = "0.8.2"
+
+[tasks.setup]
+description = "Bootstrap and maintain the dev environment"
+run = ["mise install", "uv sync"]
+
+[tasks.test]
+description = "Run the regression suite (needs a real 1Password CLI)"
+run = "uv run pytest --ignore=test/test_docker_from_outside.py"
+
+[tasks.lint]
+description = "Check lint and formatting"
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks.fmt]
+description = "Fix lint and format the code"
+run = ["uv run ruff check --fix .", "uv run ruff format ."]
+
+[tasks.build]
+description = "Build sdist and wheel"
+run = "uv build"
+
+[tasks.bump]
+description = "Bump the VERSION file: mise run bump [minor]"
+run = "uv run python -c 'import sys; from onepassword.utils import bump_version; bump_version(*sys.argv[1:])' {{arg(name=\"type\", default=\"patch\")}}"
+
+[tasks.publish]
+description = "Publish to the gitea index"
+run = "uv publish --index gitea --token \"$(uv run keyring get 'gitea API key' smurfless1)\""

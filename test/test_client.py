@@ -1,8 +1,51 @@
+import tempfile
 import unittest
+from pathlib import Path
 from typing import Dict
+from unittest import mock
 
 from onepassword import OnePassword, OnePasswordCreds
 from onepassword.settings import Settings
+
+
+class IsolatedSettingsTest(unittest.TestCase):
+    """Tests that write settings must never touch the real ~/.onepassword.pkl."""
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        patcher = mock.patch.object(
+            Settings, "MASTER_PW_CACHE", Path(tmp.name) / "settings.pkl"
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_settings(self):
+        bp = Settings()
+        key = "OP_SESSION_smurfless"
+        expected = "0BiDmjLgT2oCMXgHaaMXMJTxA2ZYOJWEMpyQm6bIi4I"
+        bp.update_profile(key, expected)
+        out = bp.get_key_value(key)
+        with bp.open() as settings:
+            self.assertTrue(key in settings)
+        self.assertEqual(out[0][key], expected)
+
+    def test_creds_to_file(self):
+        expected = "this is a big password"
+        creds = OnePasswordCreds()
+        self.assertEqual(None, creds.password)
+        creds.password = expected
+        creds.secret = expected
+        creds.save()
+        self.assertEqual(expected, creds.password)
+        self.assertNotEqual(expected, creds.encrypted_password)
+        self.assertEqual(expected, creds.secret)
+        self.assertNotEqual(expected, creds.encrypted_secret)
+
+        creds2 = OnePasswordCreds()
+        creds2.load()
+        self.assertEqual(expected, creds2.password)
+        self.assertEqual(expected, creds2.secret)
 
 
 class FunctionalTest(unittest.TestCase):
@@ -50,33 +93,6 @@ class FunctionalTest(unittest.TestCase):
         op.delete_item(item_name, vault=vault_name)
         response = op.get_item_fields(item_name, "username")
         self.assertFalse(response)
-
-    def test_settings(self):
-        bp = Settings()
-        key = "OP_SESSION_smurfless"
-        expected = "0BiDmjLgT2oCMXgHaaMXMJTxA2ZYOJWEMpyQm6bIi4I"
-        bp.update_profile(key, expected)
-        out = bp.get_key_value(key)
-        with bp.open() as settings:
-            self.assertTrue(key in settings)
-        self.assertEqual(out[0][key], expected)
-
-    def test_creds_to_file(self):
-        expected = "this is a big password"
-        creds = OnePasswordCreds()
-        self.assertEqual(None, creds.password)
-        creds.password = expected
-        creds.secret = expected
-        creds.save()
-        self.assertEqual(expected, creds.password)
-        self.assertNotEqual(expected, creds.encrypted_password)
-        self.assertEqual(expected, creds.secret)
-        self.assertNotEqual(expected, creds.encrypted_secret)
-
-        creds2 = OnePasswordCreds()
-        creds2.load()
-        self.assertEqual(expected, creds2.password)
-        self.assertEqual(expected, creds2.secret)
 
     def test_finds_multiples_with_same_title(self):
         item_name = "Airbnb"

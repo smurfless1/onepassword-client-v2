@@ -1,5 +1,6 @@
-from onepassword import OnePassword
 import pexpect
+
+from onepassword import OnePassword
 
 PROMPT = "root.*"
 

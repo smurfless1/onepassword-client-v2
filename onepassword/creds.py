@@ -1,7 +1,6 @@
 import platform
 from dataclasses import dataclass
 from functools import cached_property
-from typing import Optional
 
 from onepassword.settings import Settings
 from onepassword.string_encryptor import StringEncryptor
@@ -12,24 +11,24 @@ class OnePasswordCreds:
     """1password credential and state storage"""
 
     # shorthand name for your 1password account e.g. wandera from wandera.1password.com (optional, default=None)
-    account: Optional[str] = None
+    account: str | None = None
     # full domain name of 1password account e.g. wandera.1password.com (optional, default=None)
-    domain: Optional[str] = None
+    domain: str | None = None
     # email address of 1password account (optional, default=None)
-    email: Optional[str] = None
+    email: str | None = None
     # secret_key: secret key of 1password account (optional, default=None)
-    encrypted_secret: Optional[bytes] = None
+    encrypted_secret: bytes | None = None
     # password: password for 1password account (optional, default=None)
-    encrypted_password: Optional[bytes] = None
+    encrypted_password: bytes | None = None
 
-    session_key: Optional[str] = None
+    session_key: str | None = None
 
     @cached_property
     def encryptor(self):
         return StringEncryptor(str.encode(f"{platform.node():>32}"[:32]))
 
     @property
-    def password(self) -> Optional[str]:
+    def password(self) -> str | None:
         if self.encrypted_password is not None:
             return self.encryptor.decode(self.encrypted_password)
         return None
@@ -39,7 +38,7 @@ class OnePasswordCreds:
         self.encrypted_password = self.encryptor.encode(value)
 
     @property
-    def secret(self) -> Optional[str]:
+    def secret(self) -> str | None:
         if self.encrypted_secret is not None:
             return self.encryptor.decode(self.encrypted_secret)
         return ""

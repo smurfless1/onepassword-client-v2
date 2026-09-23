@@ -1,6 +1,4 @@
 from getpass import getpass
-from typing import List
-from pathlib import Path
 
 import pexpect
 from pexpect import TIMEOUT
@@ -78,7 +76,7 @@ class SessionManager:
         )
         self.creds.save()
 
-    def read_bash_return(self, cmd, single=False) -> str:
+    def read_bash_return(self, cmd: str | list[str], single=False) -> str:
         """Call op with env vars from the credential set"""
         return read_bash_return(
             cmd,
@@ -87,9 +85,9 @@ class SessionManager:
             single=single,
         )
 
-    def list_vaults(self) -> List[str]:
+    def list_vaults(self) -> list[str]:
         """Helper function to list all vaults"""
-        returned: List[str] = self.read_bash_return("op vault list").splitlines(
+        returned: list[str] = self.read_bash_return(["op", "vault", "list"]).splitlines(
             keepends=False
         )
         names = [line.split(maxsplit=1)[-1] for line in returned[1:]]
@@ -124,7 +122,7 @@ class SessionManager:
 
     def _spawn_signin(self, command, m_password: bytes) -> str:
         if command == "":
-            raise IOError("Spawn command not valid")
+            raise OSError("Spawn command not valid")
         child = pexpect.spawn(command)
         resp = child.expect([no_accounts_configured, pexpect.EOF, TIMEOUT], timeout=4.0)
         if resp == 0:
@@ -162,9 +160,9 @@ class SessionManager:
                 sess_key = get_session_key(child.before)
                 return sess_key
             except (ValueError, IndexError):
-                settingsfile = Path("~/.onepassword.pkl.db").expanduser()
-                if settingsfile.exists():
-                    settingsfile.unlink()
+                # forget the cached password so the next attempt prompts for it
+                self.creds.encrypted_password = None
+                self.creds.save()
         return ""
 
 
@@ -178,9 +176,7 @@ def get_session_key(process_resp_before: bytes) -> str:
     ]
     if len(new_line_response) != 1:
         raise IndexError(
-            "Session keys not parsed correctly from response: {}.".format(
-                process_resp_before
-            )
+            f"Session keys not parsed correctly from response: {process_resp_before}."
         )
     else:
         return new_line_response[0].split("\\r\\n")[1][:-1]

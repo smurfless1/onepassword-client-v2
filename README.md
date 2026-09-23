@@ -68,12 +68,12 @@ If you have 2FA turned on for your 1Password account the client will ask for you
 
 ```python
 from onepassword import OnePassword
-from typing import Dict, List
+from typing import Dict
 
 op = OnePassword()
 
-# List all vaults 
-vaults: List[str] = op.list_vaults()
+# List all vaults
+vaults: list[str] = op.list_vaults()
 
 # List all items in a vault, default is Private
 all_items_in_vault: Dict = op.list_items()
@@ -82,7 +82,6 @@ all_items_in_vault: Dict = op.list_items()
 op.get_item_fields(uuid="example")
 op.get_item_fields(uuid="example", fields="username")
 op.get_item_fields(uuid="example", fields=["username", "password"])
-
 ```
 
 ### Input formats

@@ -1,5 +1,4 @@
 import base64
-from typing import Union
 
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
@@ -8,7 +7,7 @@ BLOCK_SIZE = 32  # Bytes
 
 
 class StringEncryptor:
-    def __init__(self, secret_key: Union[str, bytes]):
+    def __init__(self, secret_key: str | bytes):
         if isinstance(secret_key, str):
             self.secret_key = str.encode(secret_key)[0:BLOCK_SIZE]
         else:

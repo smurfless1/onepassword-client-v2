@@ -1,7 +1,7 @@
 import shelve
+from collections.abc import Iterable
 from contextlib import contextmanager
 from pathlib import Path
-from typing import List, Dict, Iterable
 
 
 class Settings:
@@ -22,7 +22,7 @@ class Settings:
         with self.open() as settings:
             settings[key] = value
 
-    def get_key_value(self, key, fuzzy: bool = False) -> List[Dict[str, str]]:
+    def get_key_value(self, key, fuzzy: bool = False) -> list[dict[str, str]]:
         final_key = key
         value = None
         with self.open() as settings:

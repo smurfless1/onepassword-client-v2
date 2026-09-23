@@ -1,5 +1,5 @@
-from time import sleep
 from functools import wraps
+from time import sleep
 
 
 def retry(exceptions=None, tries=-1, delay=0, logger=None):
@@ -28,7 +28,6 @@ on failed attempts. default: retry.logging_logger. if None, logging is disabled
             _tries = tries
             while _tries:
                 try:
-
                     return func(*args, **kwargs)
 
                 except exceptions as error:  # pylint:disable=broad-except
